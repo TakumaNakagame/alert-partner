@@ -1,21 +1,47 @@
-from jinja2 import Template, Environment, FileSystemLoader
+import requests
+def getFile(url):
+    try:
+        data = requests.get(url)
+        return data.text
+    except requests.exceptions.RequestException as err:
+        print(err)
 
-def addMD(alertList, templateFile):
-    env = Environment(loader=FileSystemLoader('.'))
-    template = env.get_template(templateFile)
-    rendered = template.render(alert=alertList)
-    print(str(rendered))
+
+from jinja2 import Template, Environment, FileSystemLoader
+import os
+import shutil
 
 
 import yaml
-def getAlerts(yamlFile):
+def parseAlerts(yamlFile):
+    alerts = []
 
-    with open(yamlFile, 'r') as yml:
-        data = yaml.load(yml)
+    ymlData = yaml.load(yamlFile)
+    for alerts_array in ymlData['spec']['groups']:
+        alerts.append(alerts_array['rules'][0])
 
-    for alerts_array in data['spec']['groups']:
-        alert = alerts_array['rules'][0]
-        print(alert)
-        return alert
+    return alerts
 
-addMD(getAlerts("data.yml"), "_TEMPLATE.md")
+
+def addMD(alertList, templateFile):
+    outputDirectory = "alerts"
+    if os.path.exists(outputDirectory):
+        shutil.rmtree(outputDirectory)
+    os.mkdir(outputDirectory)
+
+    for alerts in alertList:
+        env = Environment(loader=FileSystemLoader('.'))
+        template = env.get_template(templateFile)
+        rendered = template.render(alert=alerts)
+
+        with open(outputDirectory + "/" + alerts['annotations']['wiki_path'] + ".md", 'w') as data:
+            data.write(str(rendered))
+
+
+import sys
+
+if len(sys.argv) == 2:
+    yamlUrl = sys.argv[1]
+    addMD(parseAlerts(getFile(yamlUrl)), "_TEMPLATE.md")
+else:
+    print("Specify the URL of prometheus-rules.yaml as an argument.")

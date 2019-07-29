@@ -1,18 +1,18 @@
 # {{ alert.annotations.title }}
 ## このAlertについて
-{{ alert.annotations.about }}
+{{ alert.annotations.wiki_about }}
 
 ### しきい値
-{{ alert.annotations.threshold }}
+{{ alert.annotations.wiki_threshold }}
 
 ## 緊急度
 ### {{ alert.labels.severity }}
 
 ## 影響
-{{ alert.annotations.impact }}
+{{ alert.annotations.wiki_impact }}
 
 ## 対応すること
-{{ alert.annotations.corresondence }}
+{{ alert.annotations.wiki_corresondence }}
 
 ## Alert Details
 ### expr
