@@ -1,1 +1,1 @@
-# alertDetailDocGenerator
+# alertDocGenerator
