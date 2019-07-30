@@ -1,18 +1,21 @@
 import requests
+import sys
 def getFile(url):
     try:
         data = requests.get(url)
+        if not (data.status_code == 200 or data.status_code == 301):
+            print("URL: " + str(data.status_code))
+            sys.exit()
         return data.text
     except requests.exceptions.RequestException as err:
         print(err)
+        sys.exit()
 
 
 from jinja2 import Template, Environment, FileSystemLoader
-import os
 import shutil
-
-
 import yaml
+import os
 def parseAlerts(yamlFile):
     alerts = []
 
@@ -23,7 +26,7 @@ def parseAlerts(yamlFile):
     return alerts
 
 
-def addMD(alertList, templateFile):
+def generateMarkdown(alertList, templateFile):
     outputDirectory = "alerts"
     if os.path.exists(outputDirectory):
         shutil.rmtree(outputDirectory)
@@ -38,10 +41,9 @@ def addMD(alertList, templateFile):
             data.write(str(rendered))
 
 
-import sys
-
 if len(sys.argv) == 2:
     yamlUrl = sys.argv[1]
-    addMD(parseAlerts(getFile(yamlUrl)), "_TEMPLATE.md")
+    generateMarkdown(parseAlerts(getFile(yamlUrl)), "_TEMPLATE.md")
+    # getFile(yamlUrl)
 else:
     print("Specify the URL of prometheus-rules.yaml as an argument.")
