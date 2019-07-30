@@ -27,7 +27,7 @@ def parseAlerts(yamlFile):
 
 
 def generateMarkdown(alertList, templateFile):
-    outputDirectory = "alerts"
+    outputDirectory = "Alerts"
     if os.path.exists(outputDirectory):
         shutil.rmtree(outputDirectory)
     os.mkdir(outputDirectory)
