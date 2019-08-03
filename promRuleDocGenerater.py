@@ -1,49 +1,26 @@
-import requests
+#!/usr/bin/python3
+
 import sys
-def getFile(url):
-    try:
-        data = requests.get(url)
-        if not (data.status_code == 200 or data.status_code == 301):
-            print("URL: " + str(data.status_code))
-            sys.exit()
-        return data.text
-    except requests.exceptions.RequestException as err:
-        print(err)
+import modules
+
+def main():
+    if not len(sys.argv) == 2:
+        print("Specify the URL of prometheus-rules.yaml as an argument.")
         sys.exit()
 
+    prom_yaml = modules.get_template(sys.argv[1])
+    if not prom_yaml.status:
+        print("failed get")
+        sys.exit()
 
-from jinja2 import Template, Environment, FileSystemLoader
-import shutil
-import yaml
-import os
-def parseAlerts(yamlFile):
-    alerts = []
+    prom_rules = modules.parse_alerts(prom_yaml.response)
+    if not prom_rules.status:
+        print("failed parse")
+        sys.exit()
 
-    ymlData = yaml.load(yamlFile)
-    for alerts_array in ymlData['spec']['groups']:
-        alerts.append(alerts_array['rules'][0])
+    prom_generate = modules.generate_markdown(prom_rules.alerts, "_TEMPLATE.md")
+    if not prom_generate.status:
+        print("generate failed")
 
-    return alerts
-
-
-def generateMarkdown(alertList, templateFile):
-    outputDirectory = "Alerts"
-    if os.path.exists(outputDirectory):
-        shutil.rmtree(outputDirectory)
-    os.mkdir(outputDirectory)
-
-    for alerts in alertList:
-        env = Environment(loader=FileSystemLoader('.'))
-        template = env.get_template(templateFile)
-        rendered = template.render(alert=alerts)
-
-        with open(outputDirectory + "/" + alerts['annotations']['wiki_path'] + ".md", 'w') as data:
-            data.write(str(rendered))
-
-
-if len(sys.argv) == 2:
-    yamlUrl = sys.argv[1]
-    generateMarkdown(parseAlerts(getFile(yamlUrl)), "_TEMPLATE.md")
-    # getFile(yamlUrl)
-else:
-    print("Specify the URL of prometheus-rules.yaml as an argument.")
+if __name__ == '__main__':
+    main()
